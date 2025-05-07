@@ -25,7 +25,7 @@ class CallbackVDP(CallbackViz):
         self.dist.append(trainer.train_data.dataset.datadict['xn'])
         if i == 0:
             self.mean = torch.zeros(output[f'train_{self.x_name}'].shape[-1])
-        elif (i + 1) % 1 == 0 and self.relocation:
+        elif (i + 1) % 10 == 0 and self.relocation:
             min_loss = torch.tensor(-torch.inf)
             save_data = None
             for d_batch in trainer.dev_data:
@@ -34,7 +34,7 @@ class CallbackVDP(CallbackViz):
                 if loss > min_loss:
                     min_loss = loss
                     save_data = d_batch
-            self.mean = torch.squeeze(save_data[self.x_name])
+            self.mean += 0.05 * torch.squeeze(save_data[self.x_name])
             shape = trainer.train_data.dataset.datadict[self.x_name].shape
             new_train = None
             if self.relocation:

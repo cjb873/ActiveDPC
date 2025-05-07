@@ -19,7 +19,7 @@ from TrainingViz.viz import Viz
 
 seed = 100
 nepochs = 30
-lambda_l1 = 0.
+lambda_l1 = 0.01
 # ground truth system model
 gt_model = psl.nonautonomous.VanDerPolControl()
 # sampling rate
@@ -131,9 +131,6 @@ x = variable('xn')
 ref = variable('r')
 x_min = variable('xmin')
 x_max = variable('xmax')
-l1 = variable([x], lambda x: torch.norm(list(policy.parameters())[0], 1))
-
-loss_l1 = lambda_l1*(l1 == 0)
 
 # objectives
 regulation_loss = 5. * ((x == ref) ^ 2)  # target posistion
@@ -147,7 +144,7 @@ state_lower_bound_penalty.name = 'x_min'
 state_upper_bound_penalty.name = 'x_max'
 
 # list of constraints and objectives
-objectives = [regulation_loss, loss_l1]
+objectives = [regulation_loss]
 constraints = [
     state_lower_bound_penalty,
     state_upper_bound_penalty,
@@ -294,7 +291,7 @@ plt.plot(mean_dev_loss_r, color="red", linestyle="--",
 plt.xlabel("Epoch")
 plt.ylabel("Mean Loss")
 plt.legend()
-plt.savefig("Attempt1.png", dpi=300)
+plt.savefig("Attempt4.png", dpi=300)
 plt.show()
 
 tracking_mse = torch.nn.functional.mse_loss(outputs['xn'], outputs['r'])
@@ -302,27 +299,3 @@ tracking_mse_r = torch.nn.functional.mse_loss(outputs_r['xn'], outputs_r['r'])
 
 print(f"MSE: {tracking_mse.item()}")
 print(f"MSE (R): {tracking_mse_r.item()}")
-
-
-dist = torch.squeeze(torch.stack(callb.dist))
-
-start = dist[0]
-fig, ax = plt.subplots(2, figsize=(25, 25))
-title = fig.suptitle("Distribution of Initial Conditions", fontsize=48)
-
-
-hist_top = ax[0].plot(start[:, 0], color="black")
-hist_bot = ax[1].plot(start[:, 1], color="red")
-
-
-def update(frame):
-    frame_y = dist[frame, :, :]
-    plt.cla()
-    ax[0].plot(frame_y[:, 0], color="black")
-    ax[1].plot(frame_y[:, 1], color="red")
-
-
-ani = animation.FuncAnimation(fig=fig, func=update, frames=nepochs,
-                              interval=500)
-
-ani.save(filename="test.gif", writer="pillow")
